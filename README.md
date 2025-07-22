@@ -20,3 +20,16 @@ $ python batscan.py --ip 192.168.0.1 --export json
 [+] Porta 22 aberta (Provavelmente SSH)
 [+] Porta 80 aberta (Provavelmente HTTP)
 Sistema operacional provável: Linux (TTL=64)
+```
+
+- ## 🛠️ Tecnologias
+- Python 3.10+
+- socket
+- json
+- subprocess
+- re
+- os
+
+- ## 🔮 Melhorias Futuras
+- Permitir salvar em CSV.
+- Usar threading para acelerar o scan.
