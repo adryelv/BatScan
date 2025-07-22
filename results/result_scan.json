@@ -1,0 +1,15 @@
+{
+    "ip": "scanme.nmap.org",
+    "sistema_operacional": "Provavelmente Linux/Unix",
+    "ttl": 49,
+    "portas_abertas": [
+        {
+            "porta": 22,
+            "servico": "ssh"
+        },
+        {
+            "porta": 80,
+            "servico": "http"
+        }
+    ]
+}
