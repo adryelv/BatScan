@@ -127,7 +127,7 @@ if export == 's':
             f.write(f"Sistema operacional: {system} (TTL={ttl})\n\n")
             f.write("Portas abertas:\n")
             for item in result["portas_abertas"]:
-                f.write(f"- Porta {item['porta']} → Serviço: {item['servico']}\n")
+                f.write(f"- Porta {item['porta']} → Serviço: {item['servico']} → Banner {item['banner']}\n")
         print("✅ Resultado salvo em results/resultado_scan.txt")
 
     else:
