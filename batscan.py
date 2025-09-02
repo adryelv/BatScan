@@ -4,16 +4,24 @@ import platform
 import re
 import json
 import os
+import threading
+from queue import Queue
 
-def scan_port(ip, port):
-    # Realiza o escaneamento da porta especificada, retornando True se estiver aberta
+# ------------------------------------- SCAN DE PORTAS -------------------------------------
+def scan_port(ip, port, result_list):
+    # Realiza o scan de uma porta especificada em um IP, armazenando na lista fornecida (result_list)
+    # um dicionário com a porta, o serviço associado e o banner, caso a porta esteja aberta.
+    # Imprime uma mensagem com os detalhes se a porta estiver aberta. Portas fechadas são ignoradas.
     s = socket.socket()
     s.settimeout(0.5)
     try:
         s.connect((ip, port))
-        return True
+        service = get_service_name(port)
+        banner = grab_banner(ip, port)
+        result_list.append({"porta": port, "servico": service, "banner": banner})
+        print(f"[+] Porta {port} aberta - Serviço: {service} - Banner: {banner}")
     except:
-        return False
+        pass
     finally:
         s.close()
 
@@ -24,6 +32,21 @@ def get_service_name(port):
     except:
         return "Desconhecido"
 
+# ------------------------------------- BANNER GRABBING -------------------------------------
+def grab_banner(ip, port):
+    try:
+        s = socket.socket()
+        s.settimeout(1)
+        s.connect((ip, port))
+        # Tenta receber um banner do serviço
+        banner = s.recv(1024).decode(errors="ignore").strip()
+        return banner if banner else "Nenhum banner"
+    except:
+        return "Falhou"
+    finally:
+        s.close()
+
+# ------------------------------------- DETECÇÃO DE SO -------------------------------------
 def detect_ttl(ip):
     # Executa um ping para o IP/domínio fornecido, extrai o valor do TTL da resposta usando regex. 
     # Com base no valor do TTL, tenta inferir o sistema operacional do host (Linux, Windows Roteador/Outro).
@@ -32,7 +55,6 @@ def detect_ttl(ip):
 
     try:
         response = subprocess.check_output(command, universal_newlines=True)
-
         match = re.search(r"ttl=(\d+)", response.lower())
         if match:
             ttl = int(match.group(1))
@@ -48,6 +70,14 @@ def detect_ttl(ip):
     except Exception as e:
         return None, f"Erro ao pingar: {e}"
 
+# ------------------------------------- MULTITHREADING -------------------------------------
+def threader(ip, q, result_list):
+    while not q.empty():
+        port = q.get()
+        scan_port(ip, port, result_list)
+        q.task_done()
+
+# ------------------------------------- MAIN -------------------------------------
 ip = input("Digite o IP ou domínio: ")
 
 print("\n🔍 Detectando o sistema operacional via TTL...")
@@ -64,20 +94,27 @@ result = {
     "portas_abertas": []
 }
 
+# Fila de portas
+q = Queue()
 for port in range(1, 1025):
-    # Faz escaneamento sequencial das portas de 1 à 1024.
-    # Para cada porta aberta detecta o serviço, mostra no terminal, armazena no dicionário (result).
-    if scan_port(ip, port):
-        service = get_service_name(port)
-        print(f"[+] Porta {port} aberta - Serviço provável: {service}")
-        result["portas_abertas"].append({"porta": port, "servico": service})
+    q.put(port)
 
+# Cria threads
+threads = []
+for _ in range(50): # Número de threads
+    t = threading.Thread(target=threader, args=(ip, q, result["portas_abertas"]))
+    t.start()
+    threads.append(t)
+
+for t in threads:
+    t.join()
+
+# ------------------------------------- EXPORT -------------------------------------
 export = input("\nDeseja exportar os resultados? (s/n): ").lower()
 # Exporta o resultado do scan para json ou txt e envia para a pasta results.
 os.makedirs("results", exist_ok=True)
 if export == 's':
-    format = input("Formato de exportação desejável? (json/txt): ").lower()
-
+    format = input("Formato de exportação desejável? (json/txt): ").lower()    
     if format == 'json':
         # Com 'with open' abre um arquivo, nesse caso 'resultado_scan.json ou resultado_scan.txt'. "w" escreve o resultado do scan e armazena em result.
         with open("results/result_scan.json", "w") as f:
