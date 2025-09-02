@@ -85,7 +85,7 @@ Likely operating system: Linux (TTL=64)
 # 🛠️ Technologies
 
 **Language:**
-Python 3.10+
+- Python 3.10+
 
 **Standard libraries used:**
 - socket
