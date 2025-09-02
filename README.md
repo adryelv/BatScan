@@ -88,14 +88,14 @@ Likely operating system: Linux (TTL=64)
 Python 3.10+
 
 **Standard libraries used:**
-socket
-subprocess
-re
-os
-json
-threading
-queue
-platform
+- socket
+- subprocess
+- re
+- os
+- json
+- threading
+- queue
+- platform
 
 # 🔮 Future Improvements
 - 📂 Allow saving results in CSV format
